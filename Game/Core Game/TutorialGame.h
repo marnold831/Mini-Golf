@@ -40,6 +40,7 @@ namespace NCL {
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
 			void InitWorldFromFile(const std::string& filename);
+
 			void InitMainMenu();
 			void BridgeConstraintTest();
 			void SimpleGJKTest();
@@ -82,6 +83,7 @@ namespace NCL {
 			GameWorld*			world;
 
 			bool useGravity;
+
 			bool inSelectionMode;
 			bool inMainMenuMode;
 			bool highScoresRead;
@@ -91,7 +93,7 @@ namespace NCL {
 			bool debugInfo;
 			bool serverReceived;
 
-			float		forceMagnitude;
+			float forceMagnitude;
 			float gametimer;
 			int colourChangeTimer;
 			float displayObjectInfoTimer;

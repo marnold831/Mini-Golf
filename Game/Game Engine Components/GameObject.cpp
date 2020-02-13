@@ -13,8 +13,6 @@ GameObject::GameObject(string objectName, uint32_t _layer)	{
 	networkObject	= nullptr;
 }
 
-
-
 GameObject::~GameObject()	{
 	delete boundingVolume;
 	delete physicsObject;
