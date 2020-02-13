@@ -60,9 +60,9 @@ void GameWorld::DeleteObject(GameObject* object) {
 }
 
 void GameWorld::UpdateWorld(float dt) {
+
 	UpdateTransforms();
-	if(gameMode)
-		UpdateObjects(dt);
+	UpdateObjects(dt);
 
 	if (shuffleObjects) {
 		std::random_shuffle(gameObjects.begin(), gameObjects.end());

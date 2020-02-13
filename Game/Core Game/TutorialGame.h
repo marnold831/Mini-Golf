@@ -2,9 +2,6 @@
 #include "GameTechRenderer.h"
 #include "../Game Engine Components/PhysicsSystem.h"
 
-#include "../Game Engine Components/GooseObject.h"
-#include "../Game Engine Components/KeeperObject.h"
-#include "../Game Engine Components/CharacterObject.h"
 
 #include "../Game Engine Components/HighscorePacketReceiver.h"
 
@@ -68,12 +65,7 @@ namespace NCL {
 			GameObject* AddFloorToWorld(const Vector3& position);
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, OGLTexture* texture, float inverseMass = 10.0f, string name = "", uint32_t layer = UINT32_MAX);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, OGLTexture* texture, float inverseMass = 10.0f, string name = "", uint32_t layer = UINT32_MAX);
-			GameObject* AddGooseToWorld(const Vector3& position);
-			GameObject* AddParkKeeperToWorld(const Vector3& position, GooseObject* goose);
-			GameObject* AddCharacterToWorld(const Vector3& position, GooseObject* goose);
-			GameObject* AddAppleToWorld(const Vector3& position);
-
-			void AddOOBBToWorld();
+			
 
 			void AddTreeToWorld(const Vector3& position);
 
@@ -106,7 +98,6 @@ namespace NCL {
 			float servertick;
 
 			GameObject* selectionObject = nullptr;
-			GooseObject* goose = nullptr;
 
 			OGLMesh*	cubeMesh	= nullptr;
 			OGLMesh*	sphereMesh	= nullptr;

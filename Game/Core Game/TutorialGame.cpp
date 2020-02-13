@@ -64,9 +64,7 @@ void TutorialGame::InitialiseAssets() {
 	buttonShader = new OGLShader("ButtonVert.glsl", "ButtonFrag.glsl");
 
 	InitCamera();
-	InitWorld();
-	AddOOBBToWorld();
-	InitServer();
+	
 }
 
 TutorialGame::~TutorialGame()	{
@@ -544,26 +542,7 @@ void TutorialGame::InitCamera() {
 }
 
 void TutorialGame::InitWorld() {
-	world->ClearAndErase();
-	physics->Clear();
-	
-	goose = (GooseObject*)AddGooseToWorld(Vector3(30, 2, 0));
-	goose->SetGame(this);
 
-	AddParkKeeperToWorld(Vector3(-60, 2, -50), (GooseObject*)goose);
-	AddCharacterToWorld(Vector3(45, 2, 0), goose);
-
-	InitWorldFromFile("TestGrid1.txt");
-	AddFloorToWorld(Vector3(0, -2, 0));
-	InitMainMenu();
-	
-	Vector3 gooseSpawn = Vector3(goose->GetHomeBoundary().x, 2.0, goose->GetHomeBoundary().y);
-	goose->GetTransform().SetWorldPosition(gooseSpawn);
-	goose->SetSpawnPosition(gooseSpawn);
-
-	inSelectionMode = true;
-	Window::GetWindow()->ShowOSPointer(true);
-	Window::GetWindow()->LockMouseToWindow(false);
 }
 
 void NCL::CSC8503::TutorialGame::InitServer() {
@@ -678,153 +657,6 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 }
 
 
-GameObject* TutorialGame::AddGooseToWorld(const Vector3& position)
-{
-
-	float size			= 1.0f;
-	float inverseMass	= 1.0f;
-
-	GooseObject* goose = new GooseObject("goose", GOOSE_LAYER);
-
-
-	SphereVolume* volume = new SphereVolume(size);
-	goose->SetBoundingVolume((CollisionVolume*)volume);
-
-	goose->GetTransform().SetWorldScale(Vector3(size,size,size) );
-	goose->GetTransform().SetWorldPosition(position);
-	goose->SetSpawnPosition(position);
-
-	goose->SetRenderObject(new RenderObject(&goose->GetTransform(), gooseMesh, nullptr, basicShader));
-	goose->SetPhysicsObject(new PhysicsObject(&goose->GetTransform(), goose->GetBoundingVolume()));
-
-	goose->GetPhysicsObject()->SetInverseMass(inverseMass);
-	goose->GetPhysicsObject()->InitSphereInertia();
-
-	goose->SetCamera(world->GetMainCamera());
-
-	world->AddGameObject(goose);
-
-	return goose;
-}
-
-GameObject* TutorialGame::AddParkKeeperToWorld(const Vector3& position, GooseObject* goose)
-{
-	float meshSize = 4.0f;
-	float inverseMass = 0.5f;
-
-	KeeperObject* keeper = new KeeperObject("keeper", (KEEPER_LAYER | DISABLE_OBJECT_OBJECT_COL_LAYER | CLICKABLE_LAYER), goose);
-
-	AABBVolume* volume = new AABBVolume(Vector3(0.3, 0.9f, 0.3) * meshSize);
-	keeper->SetBoundingVolume((CollisionVolume*)volume);
-
-	keeper->GetTransform().SetWorldScale(Vector3(meshSize, meshSize, meshSize));
-	keeper->GetTransform().SetWorldPosition(position);
-
-	keeper->SetRenderObject(new RenderObject(&keeper->GetTransform(), keeperMesh, nullptr, basicShader));
-	keeper->SetPhysicsObject(new PhysicsObject(&keeper->GetTransform(), keeper->GetBoundingVolume()));
-
-	keeper->GetPhysicsObject()->SetInverseMass(inverseMass);
-	keeper->GetPhysicsObject()->InitCubeInertia();
-
-	
-
-	world->AddGameObject(keeper);
-
-	return keeper;
-}
-
-GameObject* TutorialGame::AddCharacterToWorld(const Vector3& position, GooseObject* goose) {
-	float meshSize = 4.0f;
-	float inverseMass = 0.5f;
-
-	auto pos = keeperMesh->GetPositionData();
-
-	Vector3 minVal = pos[0];
-	Vector3 maxVal = pos[0];
-
-	for (auto& i : pos) {
-		maxVal.y = max(maxVal.y, i.y);
-		minVal.y = min(minVal.y, i.y);
-	}
-
-	CharacterObject* character = new CharacterObject("character", (KEEPER_LAYER | DISABLE_OBJECT_OBJECT_COL_LAYER), goose);
-
-	float r = rand() / (float)RAND_MAX;
-
-
-	AABBVolume* volume = new AABBVolume(Vector3(0.3, 0.9f, 0.3) * meshSize);
-	character->SetBoundingVolume((CollisionVolume*)volume);
-
-	character->GetTransform().SetWorldScale(Vector3(meshSize, meshSize, meshSize));
-	character->GetTransform().SetWorldPosition(position);
-	character->SetSpawnPosition(position);
-
-	character->SetRenderObject(new RenderObject(&character->GetTransform(), r > 0.5f ? charA : charB, nullptr, basicShader));
-	character->SetPhysicsObject(new PhysicsObject(&character->GetTransform(), character->GetBoundingVolume()));
-
-	character->GetPhysicsObject()->SetInverseMass(inverseMass);
-	character->GetPhysicsObject()->InitCubeInertia();
-
-	world->AddGameObject(character);
-
-	return character;
-}
-
-GameObject* TutorialGame::AddAppleToWorld(const Vector3& position) {
-	GameObject* apple = new GameObject("apple", (APPLE_LAYER | DISABLE_OBJECT_OBJECT_COL_LAYER | CLICKABLE_LAYER));
-
-	SphereVolume* volume = new SphereVolume(0.7f);
-	apple->SetBoundingVolume((CollisionVolume*)volume);
-	apple->GetTransform().SetWorldScale(Vector3(4, 4, 4));
-	apple->GetTransform().SetWorldPosition(position);
-
-	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), appleMesh, nullptr, basicShader));
-	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
-	apple->GetRenderObject()->SetColour(Vector4(1.0, 0.2, 0.2, 1.0));
-
-	apple->GetPhysicsObject()->SetInverseMass(1.0f);
-	apple->GetPhysicsObject()->InitSphereInertia();
-
-	world->AddGameObject(apple);
-
-	numberofCollectables++;
-	return apple;
-}
-
-void NCL::CSC8503::TutorialGame::AddOOBBToWorld() {
-	GameObject* OOBBA = new GameObject("OOBBA", CLICKABLE_LAYER);
-
-	OOBBVolume* volume = new OOBBVolume(Vector3(2.5,2.5,2.5));
-
-	OOBBA->SetBoundingVolume((CollisionVolume*)volume);
-	OOBBA->GetTransform().SetWorldPosition(Vector3(-70,10,40));
-	OOBBA->GetTransform().SetWorldScale(Vector3(2.5,2.5,2.5));
-	OOBBA->SetRenderObject(new RenderObject(&OOBBA->GetTransform(), cubeMesh, basicTex, basicShader));
-
-	OOBBA->SetPhysicsObject(new PhysicsObject(&OOBBA->GetTransform(), OOBBA->GetBoundingVolume()));
-
-	OOBBA->GetPhysicsObject()->SetInverseMass(1.0f);
-	OOBBA->GetPhysicsObject()->InitCubeInertia();
-
-	world->AddGameObject(OOBBA);
-
-	GameObject* OOBBB = new GameObject("OOBBB", CLICKABLE_LAYER);
-
-	OOBBVolume* volumeB = new OOBBVolume(Vector3(2.5, 2.5, 2.5));
-
-	OOBBB->SetBoundingVolume((CollisionVolume*)volumeB);
-	OOBBB->GetTransform().SetWorldPosition(Vector3(-60, 10, 40));
-	OOBBB->GetTransform().SetWorldScale(Vector3(2.5, 2.5, 2.5));
-	OOBBB->SetRenderObject(new RenderObject(&OOBBB->GetTransform(), cubeMesh, basicTex, basicShader));
-
-	OOBBB->SetPhysicsObject(new PhysicsObject(&OOBBB->GetTransform(), OOBBB->GetBoundingVolume()));
-
-	OOBBB->GetPhysicsObject()->SetInverseMass(1.0f);
-	OOBBB->GetPhysicsObject()->InitCubeInertia();
-
-	world->AddGameObject(OOBBB);
-}
-
 bool TutorialGame::ButtonAAction() {
 	bool success = false;
 	for (auto i : menuObjects) {
@@ -932,61 +764,7 @@ void TutorialGame::InitCubeGridWorld(int numRows, int numCols, float rowSpacing,
 }
 
 void TutorialGame::InitWorldFromFile(const std::string& filename) {
-	int nodeSize;
-	int gridWidth;
-	int gridHeight;
-	std::ifstream infile(Assets::DATADIR + filename);
 
-	infile >> nodeSize;
-	infile >> gridWidth;
-	infile >> gridHeight;
-
-	for (int y = 0; y < gridHeight; ++y) {
-		for (int x = 0; x < gridWidth; ++x) {
-			char type = 0;
-			infile >> type;
-
-			if (type == 'x') {
-				int cubeDimension = 100 / gridWidth;
-				Vector3 position = Vector3((x * gridWidth) /2, 0, (y * gridHeight) /2);
-				ConvertFromNavSpaceToWorldSpace(position);
-				position.y = position.y + 5;
-				AddCubeToWorld(position, Vector3(cubeDimension, cubeDimension, cubeDimension), fenceTex, 0.0f, "Wall", DISABLE_COLLISION_RES_LAYER);
-			}
-			if (type == 'w') {
-				int cubeDimension = 100 / gridWidth;
-				Vector3 position = Vector3((x * gridWidth) / 2, 0, (y * gridHeight) / 2);
-				ConvertFromNavSpaceToWorldSpace(position);
-				position.y = -1.0f;
-				AddCubeToWorld(position, Vector3(cubeDimension, 1.01, cubeDimension), nullptr, 0.0f, "water", DISABLE_COLLISION_RES_LAYER | CLICKABLE_LAYER);
-			}
-			if (type == 't') {
-				Vector3 position = Vector3((x * gridWidth) / 2, 0, (y * gridHeight) / 2);
-				ConvertFromNavSpaceToWorldSpace(position);
-				AddTreeToWorld(position);
-
-			}
-			if (type == 'a') {
-				Vector3 position = Vector3((x * gridWidth) / 2, 0, (y * gridHeight) / 2);
-				ConvertFromNavSpaceToWorldSpace(position);
-				position.y += 1.0f;
-				AddAppleToWorld(position);
-			}
-			if (type == 'h') {
-				int cubeDimension = 100 / gridWidth;
-				Vector3 position = Vector3((x * gridWidth) / 2, 0, (y * gridHeight) / 2);
-				ConvertFromNavSpaceToWorldSpace(position);
-				goose->SetHomeBoundary(Vector2(position.x+ cubeDimension-1, position.z - cubeDimension+1 ));
-			}
-			if (type == 'b') {
-				Vector3 bonusDimension = Vector3(0.5, 0.5, 0.5);
-				Vector3 position = Vector3((x * gridWidth) / 2, 0, (y * gridHeight) / 2);
-				ConvertFromNavSpaceToWorldSpace(position);
-				position.y = 0.25;
-				AddCubeToWorld(position, bonusDimension, basicTex, 1.0f, "bonus", APPLE_LAYER | CLICKABLE_LAYER);
-			}
-		}
-	}
 }
 
 
@@ -1040,13 +818,13 @@ void TutorialGame::SimpleGJKTest() {
 }
 
 void TutorialGame::SetCameraBehindGoose() {
-	Quaternion orientationGoose = goose->GetTransform().GetWorldOrientation();
+	/*Quaternion orientationGoose = goose->GetTransform().GetWorldOrientation();
 	Vector3 frwdAxis(0, 0, 1);
 	frwdAxis = orientationGoose * frwdAxis;
 	world->GetMainCamera()->SetPosition(goose->GetTransform().GetWorldPosition() - (frwdAxis * 25));
 	Vector3 camPos = world->GetMainCamera()->GetPosition();
 	camPos.y += 10.0f;
-	world->GetMainCamera()->SetPosition(camPos);
+	world->GetMainCamera()->SetPosition(camPos);*/
 }
 
 bool NCL::CSC8503::TutorialGame::ConvertFromNavSpaceToWorldSpace(Vector3& pos)

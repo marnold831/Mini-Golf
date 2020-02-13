@@ -138,10 +138,7 @@
     <ClInclude Include="BoundingOOBB.h" />
     <ClInclude Include="BoundingSphere.h" />
     <ClInclude Include="BoundingVolume.h" />
-    <ClInclude Include="CharacterObject.h" />
-    <ClInclude Include="GooseObject.h" />
     <ClInclude Include="HighscorePacketReceiver.h" />
-    <ClInclude Include="KeeperObject.h" />
     <ClInclude Include="Layers.h" />
     <ClInclude Include="NavigationGrid.h" />
     <ClInclude Include="NavigationMap.h" />
@@ -178,16 +175,13 @@
     <ClCompile Include="BoundingOOBB.cpp" />
     <ClCompile Include="BoundingSphere.cpp" />
     <ClCompile Include="BoundingVolume.cpp" />
-    <ClCompile Include="CharacterObject.cpp" />
     <ClCompile Include="CollisionDetection.cpp" />
     <ClCompile Include="Debug.cpp" />
     <ClCompile Include="GameClient.cpp" />
     <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GameServer.cpp" />
     <ClCompile Include="GameWorld.cpp" />
-    <ClCompile Include="GooseObject.cpp" />
     <ClCompile Include="HighscorePacketReceiver.cpp" />
-    <ClCompile Include="KeeperObject.cpp" />
     <ClCompile Include="NavigationGrid.cpp" />
     <ClCompile Include="NavigationMesh.cpp" />
     <ClCompile Include="NetworkBase.cpp" />
