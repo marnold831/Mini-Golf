@@ -16,7 +16,7 @@ PhysicsSystem::PhysicsSystem(GameWorld& g) : gameWorld(g)	{
 	applyGravity	= false;
 	useBroadPhase	= false;	
 	dTOffset		= 0.0f;
-	globalDamping	= 0.95f;
+	globalDamping	= 0.1f;
 	SetGravity(Vector3(0.0f, -9.8f, 0.0f));
 }
 
@@ -216,6 +216,10 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 
 	float totalMass = physA->GetInverseMass() + physB->GetInverseMass();
 
+	if (totalMass == 0.0f) {
+		return;
+	}
+
 	transformA.SetWorldPosition(transformA.GetWorldPosition() - (p.normal * p.penetration * (physA->GetInverseMass() / totalMass)));
 	transformB.SetWorldPosition(transformB.GetWorldPosition() + (p.normal * p.penetration * (physB->GetInverseMass() / totalMass)));
 
@@ -232,12 +236,16 @@ void PhysicsSystem::ImpulseResolveCollision(GameObject& a, GameObject& b, Collis
 
 	float impulseForce = Vector3::Dot(contactVelocity, p.normal);
 
+	if (impulseForce > 0) {
+		return;
+	}
+
 	Vector3 inertiaA = Vector3::Cross(physA->GetInertiaTensor() * Vector3::Cross(relativeA, p.normal), relativeA);
 	Vector3 inertiaB = Vector3::Cross(physB->GetInertiaTensor() * Vector3::Cross(relativeB, p.normal), relativeB);
 
 	float angularEffect = Vector3::Dot(inertiaA + inertiaB, p.normal);
 
-	float cRestituation = 0.66f;
+	float cRestituation = 0.1f;
 
 	float j = (-(1.0f + cRestituation) * impulseForce) / (totalMass + angularEffect);
 
@@ -328,7 +336,7 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 	std::vector<GameObject*>::const_iterator last;
 	gameWorld.GetObjectIterators(first, last);
 
-	float dampingFactor = 1.0f - 0.95f;
+	float dampingFactor = globalDamping;
 	float frameDamping = powf(dampingFactor, dt);
 
 	for (auto i = first; i != last; ++i) {
@@ -343,8 +351,9 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 		Vector3 linearVel = object->GetLinearVelocity();
 
 		position += linearVel * dt;
-		transform.SetWorldPosition(position);
+
 		transform.SetLocalPosition(position);
+		transform.SetWorldPosition(position);
 
 		linearVel = linearVel * frameDamping;
 		object->SetLinearVelocity(linearVel);

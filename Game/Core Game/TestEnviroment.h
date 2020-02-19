@@ -8,8 +8,8 @@ Descritpion: This is a basic test enviroment for developing features for the gam
 
 #include <string>
 
-#include "../Game Engine Components/PhysicsSystem.h"
-#include "../Game Engine Components/GameWorld.h"
+#include "../../Game/Game Engine Components/PhysicsSystem.h"
+#include "../../Game/Game Engine Components/GameWorld.h"
 #include "../../Plugins/OpenGLRendering/OGLMesh.h"
 #include "../../Plugins/OpenGLRendering/OGLShader.h"
 #include "../../Plugins/OpenGLRendering/OGLTexture.h"
@@ -32,9 +32,16 @@ namespace NCL {
 			// Control Functions
 			void UpdateKeybinds();
 
+			bool SelectObject();
+			void MoveSelectedObject();
+			void LockedObjectMovement();
+			void LockedCameraMovement();
+
 			// Add Object Functions
 			GameObject* AddObject(const string objectName, const uint32_t objectLayer, const bool isSphere,
 				const float inverseMass, const Vector3 position, const Vector3 size, const Vector4 colour);
+
+			GameObject* AddGoalToWorld(const Vector3& position);
 
 			GameWorld*			world;
 			PhysicsSystem*		physics;
@@ -44,10 +51,22 @@ namespace NCL {
 
 			bool isDebugActive;
 
+			bool inSelectionMode;
+
+			float forceMagnitude;
+
+			GameObject* selectionObject = nullptr;
+
 			OGLMesh*	cubeMesh		= nullptr;
 			OGLMesh*	sphereMesh		= nullptr;
+			OGLMesh* flagMesh = nullptr;
+
 			OGLTexture* basicTexture	= nullptr;
 			OGLShader*	basicShader		= nullptr;
+
+			GameObject* lockedObject = nullptr;
+
+			Vector3 lockedOffset = Vector3(-20, 18, 30);
 		};
 	}
 }
