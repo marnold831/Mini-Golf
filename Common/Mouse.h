@@ -33,6 +33,9 @@ namespace NCL {
 
 		//Is this mouse button currently pressed down?
 		inline bool	ButtonDown(MouseButtons button) const { return buttons[(int)button]; }
+
+		inline bool ButtonUp(MouseButtons button) const { return !buttons[(int)button]; }
+
 		//Has this mouse button been held down for multiple frames?
 		inline bool	ButtonHeld(MouseButtons button) const { return buttons[(int)button] && holdButtons[(int)button]; }
 		//Has this mouse button been double clicked?

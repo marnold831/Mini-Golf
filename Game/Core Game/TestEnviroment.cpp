@@ -39,7 +39,7 @@ void TestEnviroment::UpdateGame(float dt) {
 	UpdateKeybinds();
 
 	SelectObject();
-	MoveSelectedObject();
+	MoveSelectedObject(dt);
 
 	world->GetMainCamera()->UpdateCamera(dt);
 	world->UpdateWorld(dt);
@@ -89,23 +89,16 @@ void TestEnviroment::InitLevel() {
 }
 
 void TestEnviroment::UpdateKeybinds() {
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F1)) {
-		InitLevel(); //We can reset the simulation at any time with F1
-		selectionObject = nullptr;
-	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F2)) {
-		InitCamera(); //F2 will reset the camera to a specific default place
+		InitCamera();
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::G)) {
-		hasGravity = !hasGravity; //Toggle gravity!
+		hasGravity = !hasGravity; 
 		physics->UseGravity(hasGravity);
 	}
-	//Running certain physics updates in a consistent order might cause some
-	//bias in the calculations - the same objects might keep 'winning' the constraint
-	//allowing the other one to stretch too much etc. Shuffling the order so that it
-	//is random every frame can help reduce such bias.
+	
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F9)) {
 		world->ShuffleConstraints(true);
 	}
@@ -123,9 +116,9 @@ void TestEnviroment::UpdateKeybinds() {
 	if (lockedObject) {
 		LockedObjectMovement();
 	}
-	//else {
-	//	DebugObjectMovement();
-	//}
+	else {
+		DebugObjectMovement();
+	}
 }
 
 void TestEnviroment::LockedObjectMovement() {
@@ -198,6 +191,45 @@ void  TestEnviroment::LockedCameraMovement() {
 	}
 }
 
+void TestEnviroment::DebugObjectMovement() {
+	
+	if (inSelectionMode && selectionObject) {
+		
+
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) {
+			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
+		}
+
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) {
+			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, -10, 0));
+		}
+
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM5)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -10, 0));
+		}
+
+		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM6)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 100, 0));
+		}
+
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM7)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -10));
+		}
+
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM8)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 10));
+		}
+
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM9)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(-10, 0, 0));
+		}
+
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM0)) {
+			selectionObject->GetPhysicsObject()->AddForce(Vector3(10, 0, 0));
+		}
+	}
+}
+
 bool TestEnviroment::SelectObject() {
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::Q)) {
 		inSelectionMode = !inSelectionMode;
@@ -214,8 +246,8 @@ bool TestEnviroment::SelectObject() {
 		//renderer->DrawString("Press Q to change to camera mode!", Vector2(10, 0));
 
 		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
-			if (selectionObject) {	//set colour to deselected;
-				//selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
+			if (selectionObject) {	
+				selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
 				selectionObject = nullptr;
 			}
 
@@ -224,7 +256,7 @@ bool TestEnviroment::SelectObject() {
 			RayCollision closestCollision;
 			if (world->Raycast(ray, closestCollision, true)) {
 				selectionObject = (GameObject*)closestCollision.node;
-				//selectionObject->GetRenderObject()->SetColour(Vector4(0, 0, 1, 1));
+				selectionObject->GetRenderObject()->SetColour(Vector4(0, 0, 1, 1));
 				return true;
 			}
 			else {
@@ -248,24 +280,36 @@ bool TestEnviroment::SelectObject() {
 	return false;
 }
 
-void TestEnviroment::MoveSelectedObject() {
+void TestEnviroment::MoveSelectedObject(float dt) {
 	//renderer->DrawString("Click on the goose and press L to start!", Vector2(10, 20));
-	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 120.0f;
+	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 20.0f;
+	renderer->DrawString("Built-up Force: " + std::to_string(forceMagnitude), Vector2(10, 20), 0.5f);
 
 	if (!selectionObject) {
 		return;
 	}
 
-	if (Window::GetMouse()->ButtonPressed(NCL::MouseButtons::RIGHT)) {
+	if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::RIGHT)) {
 		Ray ray = CollisionDetection::BuildRayFromMouse(*world->GetMainCamera());
 
 		RayCollision closestCollision;
+
+		
 		if (world->Raycast(ray, closestCollision, true)) {
 			if (closestCollision.node == selectionObject) {
-				selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude, closestCollision.collidedAt);
+				forceMagnitude += 300.0f * dt;
 			}
+			
 		}
+
+		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
+			selectionObject->GetPhysicsObject()->AddForceAtPosition(Vector3(ray.GetDirection().x, 0.5f, ray.GetDirection().z) * forceMagnitude, closestCollision.collidedAt);
+			forceMagnitude = 0.0f;
+		}
+
 	}
+
+	
 }
 
 GameObject* TestEnviroment::AddObject(const string objectName, const uint32_t objectLayer, const bool isSphere,

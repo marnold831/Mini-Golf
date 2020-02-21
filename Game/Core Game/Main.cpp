@@ -11,8 +11,8 @@ int main() {
 		return -1;
 	}	
 	
-	w->ShowOSPointer(true);
-	w->LockMouseToWindow(false);
+	w->ShowOSPointer(false);
+	w->LockMouseToWindow(true);
 
 	TestEnviroment* g = new TestEnviroment();
 	

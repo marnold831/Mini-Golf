@@ -33,9 +33,10 @@ namespace NCL {
 			void UpdateKeybinds();
 
 			bool SelectObject();
-			void MoveSelectedObject();
+			void MoveSelectedObject(float dt);
 			void LockedObjectMovement();
 			void LockedCameraMovement();
+			void DebugObjectMovement();
 
 			// Add Object Functions
 			GameObject* AddObject(const string objectName, const uint32_t objectLayer, const bool isSphere,
