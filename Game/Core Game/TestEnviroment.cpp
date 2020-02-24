@@ -37,9 +37,11 @@ void TestEnviroment::UpdateGame(float dt) {
 	}
 
 	UpdateKeybinds();
+	renderer->DrawString(club_type, Vector2(10, 50), 0.5f);
+
 
 	SelectObject();
-	MoveSelectedObject(dt);
+	MoveSelectedObject_1Button(dt);
 
 	world->GetMainCamera()->UpdateCamera(dt);
 	world->UpdateWorld(dt);
@@ -77,7 +79,10 @@ void TestEnviroment::InitLevel() {
 
 	physics->UseGravity(hasGravity);
 
-	// Add floor to world
+	vertical_component = 0.5f;
+	horizontal_component = 1.0f;
+	club_type = "Putter club";
+
 	Vector3 floorPosition = Vector3(0.0f, 0.0f, 0.0f);
 	Vector3 floorSize = Vector3(100.0f, 2.0f, 100.0f);
 	Vector4 floorColour = Vector4(0.14f, 0.55f, 0.14f, 1.0f);
@@ -90,27 +95,24 @@ void TestEnviroment::InitLevel() {
 
 void TestEnviroment::UpdateKeybinds() {
 
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F2)) {
-		InitCamera();
-	}
-
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::G)) {
 		hasGravity = !hasGravity; 
 		physics->UseGravity(hasGravity);
 	}
 	
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F9)) {
-		world->ShuffleConstraints(true);
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F10)) {
-		world->ShuffleConstraints(false);
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM1)) {
+		vertical_component = 0.25f, horizontal_component = 1.0f;
+		club_type = "Putter club";
 	}
 
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F7)) {
-		world->ShuffleObjects(true);
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM2)) {
+		vertical_component = 1.0f, horizontal_component = 0.5f;
+		club_type = "Iron club";
 	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F8)) {
-		world->ShuffleObjects(false);
+
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM3)) {
+		vertical_component = 0.5f, horizontal_component = 2.0f;
+		club_type = "Wood club";
 	}
 
 	if (lockedObject) {
@@ -125,11 +127,7 @@ void TestEnviroment::LockedObjectMovement() {
 	Matrix4 view = world->GetMainCamera()->BuildViewMatrix();
 	Matrix4 camWorld = view.Inverse();
 
-	Vector3 rightAxis = Vector3(camWorld.GetColumn(0)); //view is inverse of model!
-
-	//forward is more tricky -  camera forward is 'into' the screen...
-	//so we can take a guess, and use the cross of straight up, and
-	//the right axis, to hopefully get a vector that's good enough!
+	Vector3 rightAxis = Vector3(camWorld.GetColumn(0)); 
 
 	Vector3 fwdAxis = Vector3::Cross(Vector3(0, 1, 0), rightAxis);
 
@@ -176,7 +174,7 @@ void TestEnviroment::LockedObjectMovement() {
 void  TestEnviroment::LockedCameraMovement() {
 	if (lockedObject != nullptr) {
 		Vector3 objPos = lockedObject->GetTransform().GetWorldPosition();
-		Vector3 camPos = objPos + lockedOffset;
+		Vector3 camPos = objPos + locked_offset;
 
 		Matrix4 temp = Matrix4::BuildViewMatrix(camPos, objPos, Vector3(0, 1, 0));
 
@@ -247,7 +245,6 @@ bool TestEnviroment::SelectObject() {
 
 		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
 			if (selectionObject) {	
-				selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
 				selectionObject = nullptr;
 			}
 
@@ -256,7 +253,6 @@ bool TestEnviroment::SelectObject() {
 			RayCollision closestCollision;
 			if (world->Raycast(ray, closestCollision, true)) {
 				selectionObject = (GameObject*)closestCollision.node;
-				selectionObject->GetRenderObject()->SetColour(Vector4(0, 0, 1, 1));
 				return true;
 			}
 			else {
@@ -280,10 +276,39 @@ bool TestEnviroment::SelectObject() {
 	return false;
 }
 
-void TestEnviroment::MoveSelectedObject(float dt) {
+void TestEnviroment::MoveSelectedObject_1Button(float dt) {
 	//renderer->DrawString("Click on the goose and press L to start!", Vector2(10, 20));
-	forceMagnitude += Window::GetMouse()->GetWheelMovement() * 20.0f;
-	renderer->DrawString("Built-up Force: " + std::to_string(forceMagnitude), Vector2(10, 20), 0.5f);
+	
+	renderer->DrawString("Built-up Force: " + std::to_string(force_magnitude), Vector2(10, 10), 0.5f);
+
+	if (!selectionObject) {
+		return;
+	}
+
+	Ray ray = CollisionDetection::BuildRayFromMouse(*world->GetMainCamera());
+
+	static RayCollision closestCollision;
+
+	if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
+	
+		
+		if (world->Raycast(ray, closestCollision, true)) {
+			if (closestCollision.node == selectionObject) {
+				force_magnitude += 400.0f * dt;
+			}
+		}
+	}
+
+	if (!Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
+		selectionObject->GetPhysicsObject()->AddForceAtPosition(Vector3(ray.GetDirection().x * horizontal_component, vertical_component, ray.GetDirection().z * horizontal_component) * force_magnitude, closestCollision.collidedAt);
+		force_magnitude = 0.0f;
+	}
+}
+
+void TestEnviroment::MoveSelectedObject_2Buttons(float dt) {
+	//renderer->DrawString("Click on the goose and press L to start!", Vector2(10, 20));
+	force_magnitude += Window::GetMouse()->GetWheelMovement() * 20.0f;
+	renderer->DrawString("Built-up Force: " + std::to_string(force_magnitude), Vector2(10, 10), 0.5f);
 
 	if (!selectionObject) {
 		return;
@@ -294,23 +319,20 @@ void TestEnviroment::MoveSelectedObject(float dt) {
 
 		RayCollision closestCollision;
 
-		
 		if (world->Raycast(ray, closestCollision, true)) {
 			if (closestCollision.node == selectionObject) {
-				forceMagnitude += 300.0f * dt;
+				force_magnitude += 400.0f * dt;
 			}
-			
+
 		}
 
 		if (Window::GetMouse()->ButtonDown(NCL::MouseButtons::LEFT)) {
-			selectionObject->GetPhysicsObject()->AddForceAtPosition(Vector3(ray.GetDirection().x, 0.5f, ray.GetDirection().z) * forceMagnitude, closestCollision.collidedAt);
-			forceMagnitude = 0.0f;
+			selectionObject->GetPhysicsObject()->AddForceAtPosition(Vector3(ray.GetDirection().x * horizontal_component, vertical_component, ray.GetDirection().z * horizontal_component) * force_magnitude, closestCollision.collidedAt);
+			force_magnitude = 0.0f;
 		}
-
 	}
-
-	
 }
+
 
 GameObject* TestEnviroment::AddObject(const string objectName, const uint32_t objectLayer, const bool isSphere,
 	const float inverseMass, const Vector3 position, const Vector3 size, const Vector4 colour) {

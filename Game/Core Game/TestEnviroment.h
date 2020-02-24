@@ -33,7 +33,8 @@ namespace NCL {
 			void UpdateKeybinds();
 
 			bool SelectObject();
-			void MoveSelectedObject(float dt);
+			void MoveSelectedObject_1Button(float dt);
+			void MoveSelectedObject_2Buttons(float dt);
 			void LockedObjectMovement();
 			void LockedCameraMovement();
 			void DebugObjectMovement();
@@ -54,7 +55,10 @@ namespace NCL {
 
 			bool inSelectionMode;
 
-			float forceMagnitude;
+			float force_magnitude;
+
+			float vertical_component;
+			float horizontal_component;
 
 			GameObject* selectionObject = nullptr;
 
@@ -67,7 +71,9 @@ namespace NCL {
 
 			GameObject* lockedObject = nullptr;
 
-			Vector3 lockedOffset = Vector3(-20, 18, 30);
+			Vector3 locked_offset = Vector3(-20, 18, 30);
+
+			string club_type;
 		};
 	}
 }
